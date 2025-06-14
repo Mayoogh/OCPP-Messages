@@ -4,11 +4,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>OCPP Messages</title>
-  <link href="prism.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/plugins/line-numbers/prism-line-numbers.css" />
-<script src="https://cdn.jsdelivr.net/npm/prismjs/plugins/line-numbers/prism-line-numbers.min.js"></script>
-
-
   <style>
     body {
       font-family: sans-serif;
@@ -52,16 +47,72 @@
       background: #f0f0f0;
     }
 
-    /* details summary {
-      cursor: pointer;
+    /* Styles for JSON formatting and folding */
+    .json-block {
+      background: #272822;
+      color: #f8f8f2;
+      border-radius: 6px;
+      margin: 8px 0;
+      padding: 8px 12px;
       font-family: monospace;
-      color: #444;
+      font-size: 0.98em;
+      position: relative;
+      overflow-x: auto;
     }
 
-    details {
-      margin-bottom: 5px;
-      padding-left: 10px;
-    } */
+    .json-line {
+      margin: 2px 0;
+      position: relative;
+    }
+
+    .json-key {
+      color: #a6e22e;
+    }
+
+    .json-string {
+      color: #e6db74;
+    }
+
+    .json-number,
+    .json-boolean {
+      color: #ae81ff;
+    }
+
+    .json-null {
+      color: #66d9ef;
+    }
+
+    .json-bracket,
+    .json-comma {
+      color: #f8f8f2;
+    }
+
+    .json-colon {
+      color: #f92672;
+    }
+
+    .json-toggle {
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 5px;
+      user-select: none;
+      color: #66d9ef;
+      display: inline-block;
+      width: 12px;
+    }
+
+    .json-collapsed-indicator {
+      color: #75715e;
+      margin-left: 5px;
+    }
+
+    .json-children {
+      margin-left: 20px;
+    }
+
+    .json-children.hidden {
+      display: none;
+    }
   </style>
 </head>
 
@@ -72,7 +123,6 @@
 
   <div id="container"></div>
 
-  <script src="prism.js"></script>
   <script>
     const ocppMessages = {
       "AdjustPeriodicEventStream": {
@@ -22168,42 +22218,171 @@
         }
       }
     };
+
     const container = document.getElementById("container");
     const searchInput = document.getElementById("searchInput");
 
-    // Function to create a foldable JSON code block
-    function createFoldableJSON(obj) {
-      if (typeof obj !== 'object' || obj === null) return document.createTextNode(JSON.stringify(obj));
-
+    function formatJsonToHtml(data, indent = 0) {
       const container = document.createElement('div');
-      container.style.marginLeft = "1em";
-
-      for (let key in obj) {
-        const value = obj[key];
-        const line = document.createElement('div');
-
-        if (typeof value === 'object' && value !== null) {
-          const details = document.createElement('details');
-          const summary = document.createElement('summary');
-          summary.textContent = `"${key}": { ... }`;
-          details.appendChild(summary);
-          details.appendChild(createFoldableJSON(value));
-          line.appendChild(details);
-        } else {
-          line.textContent = `"${key}": ${JSON.stringify(value)},`;
-        }
-
-        container.appendChild(line);
+      
+      function createIndent(level) {
+        return '  '.repeat(level);
       }
-
+      
+      function createLine(content, hasToggle = false, toggleCallback = null) {
+        const line = document.createElement('div');
+        line.className = 'json-line';
+        
+        if (hasToggle) {
+          const toggle = document.createElement('span');
+          toggle.className = 'json-toggle';
+          toggle.textContent = '▼';
+          toggle.addEventListener('click', toggleCallback);
+          line.appendChild(toggle);
+        } else {
+          const spacer = document.createElement('span');
+          spacer.className = 'json-toggle';
+          spacer.textContent = ' ';
+          line.appendChild(spacer);
+        }
+        
+        const contentSpan = document.createElement('span');
+        contentSpan.innerHTML = createIndent(indent) + content;
+        line.appendChild(contentSpan);
+        
+        return line;
+      }
+      
+      function formatValue(value, key = null, isLast = true) {
+        let prefix = '';
+        if (key !== null) {
+          prefix = `<span class="json-key">"${key}"</span><span class="json-colon">: </span>`;
+        }
+        
+        if (value === null) {
+          const line = createLine(prefix + `<span class="json-null">null</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          return { element: line, hasChildren: false };
+        }
+        
+        if (typeof value === 'string') {
+          const line = createLine(prefix + `<span class="json-string">"${value}"</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          return { element: line, hasChildren: false };
+        }
+        
+        if (typeof value === 'number') {
+          const line = createLine(prefix + `<span class="json-number">${value}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          return { element: line, hasChildren: false };
+        }
+        
+        if (typeof value === 'boolean') {
+          const line = createLine(prefix + `<span class="json-boolean">${value}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          return { element: line, hasChildren: false };
+        }
+        
+        if (Array.isArray(value)) {
+          const childrenContainer = document.createElement('div');
+          childrenContainer.className = 'json-children';
+          
+          const hasChildren = value.length > 0;
+          const collapsedIndicator = hasChildren ? '<span class="json-collapsed-indicator">...</span>' : '';
+          
+          const openLine = createLine(
+            prefix + `<span class="json-bracket">[</span><span class="json-collapsed-indicator" style="display: none;">${collapsedIndicator}</span>`,
+            hasChildren,
+            function() {
+              const isHidden = childrenContainer.classList.toggle('hidden');
+              this.textContent = isHidden ? '▶' : '▼';
+              const indicator = this.parentElement.querySelector('.json-collapsed-indicator');
+              indicator.style.display = isHidden ? 'inline' : 'none';
+            }
+          );
+          
+          if (hasChildren) {
+            value.forEach((item, index) => {
+              const isLastItem = index === value.length - 1;
+              const childResult = formatValue(item, null, isLastItem);
+              const childContainer = document.createElement('div');
+              const childFormatter = formatJsonToHtml(item, indent + 1);
+              childrenContainer.appendChild(childFormatter);
+            });
+          }
+          
+          const closeLine = createLine(`<span class="json-bracket">]</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          
+          const wrapper = document.createElement('div');
+          wrapper.appendChild(openLine);
+          wrapper.appendChild(childrenContainer);
+          wrapper.appendChild(closeLine);
+          
+          return { element: wrapper, hasChildren };
+        }
+        
+        if (typeof value === 'object') {
+          const keys = Object.keys(value);
+          const hasChildren = keys.length > 0;
+          
+          const childrenContainer = document.createElement('div');
+          childrenContainer.className = 'json-children';
+          
+          const collapsedIndicator = hasChildren ? '<span class="json-collapsed-indicator">...</span>' : '';
+          
+          const openLine = createLine(
+            prefix + `<span class="json-bracket">{</span><span class="json-collapsed-indicator" style="display: none;">${collapsedIndicator}</span>`,
+            hasChildren,
+            function() {
+              const isHidden = childrenContainer.classList.toggle('hidden');
+              this.textContent = isHidden ? '▶' : '▼';
+              const indicator = this.parentElement.querySelector('.json-collapsed-indicator');
+              indicator.style.display = isHidden ? 'inline' : 'none';
+            }
+          );
+          
+          if (hasChildren) {
+            keys.forEach((k, index) => {
+              const isLastItem = index === keys.length - 1;
+              const childFormatter = formatJsonToHtml(value[k], indent + 1);
+              const childLine = createLine(
+                `<span class="json-key">"${k}"</span><span class="json-colon">: </span>`,
+                typeof value[k] === 'object' && value[k] !== null && Object.keys(value[k]).length > 0,
+                typeof value[k] === 'object' && value[k] !== null && Object.keys(value[k]).length > 0 ? 
+                  function() {
+                    const childContainer = this.parentElement.nextElementSibling;
+                    const isHidden = childContainer.classList.toggle('hidden');
+                    this.textContent = isHidden ? '▶' : '▼';
+                  } : null
+              );
+              
+              if (typeof value[k] === 'object' && value[k] !== null) {
+                childrenContainer.appendChild(childLine);
+                const nestedContainer = document.createElement('div');
+                nestedContainer.className = 'json-children';
+                nestedContainer.appendChild(childFormatter);
+                childrenContainer.appendChild(nestedContainer);
+              } else {
+                const primitiveResult = formatValue(value[k], k, isLastItem);
+                childrenContainer.appendChild(primitiveResult.element);
+              }
+            });
+          }
+          
+          const closeLine = createLine(`<span class="json-bracket">}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
+          
+          const wrapper = document.createElement('div');
+          wrapper.appendChild(openLine);
+          wrapper.appendChild(childrenContainer);
+          wrapper.appendChild(closeLine);
+          
+          return { element: wrapper, hasChildren };
+        }
+      }
+      
+      const result = formatValue(data);
+      container.appendChild(result.element);
       return container;
     }
 
-
-
-
     function renderMessages(filter = "") {
-      container.innerHTML = ""; // Clear container
+      container.innerHTML = "";
       const filterLower = filter.toLowerCase();
 
       Object.entries(ocppMessages)
@@ -22222,12 +22401,11 @@
             labelReq.className = "label";
             labelReq.textContent = "Request:";
             details.appendChild(labelReq);
-            const preReq = document.createElement("pre");
-            preReq.className = "language-json";
-            const codeReq = createFoldableJSON(payloads.request);
-            preReq.appendChild(codeReq);
 
-            details.appendChild(preReq);
+            const jsonBlockReq = document.createElement('div');
+            jsonBlockReq.className = 'json-block';
+            jsonBlockReq.appendChild(formatJsonToHtml(payloads.request));
+            details.appendChild(jsonBlockReq);
           }
 
           if (payloads.response) {
@@ -22236,24 +22414,21 @@
             labelRes.textContent = "Response:";
             details.appendChild(labelRes);
 
-            const preRes = document.createElement("pre");
-            preRes.className = "language-json";
-            const codeRes = createFoldableJSON(payloads.response);
-            preRes.appendChild(codeRes);
-            details.appendChild(preRes);
+            const jsonBlockRes = document.createElement('div');
+            jsonBlockRes.className = 'json-block';
+            jsonBlockRes.appendChild(formatJsonToHtml(payloads.response));
+            details.appendChild(jsonBlockRes);
           }
 
           group.appendChild(details);
           container.appendChild(group);
         });
-
-      Prism.highlightAll();
     }
 
-    // Initial render without filter
+    // Initial render
     renderMessages();
 
-    // Add event listener for search input
+    // Search functionality
     searchInput.addEventListener("input", e => {
       renderMessages(e.target.value);
     });
