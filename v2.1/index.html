@@ -3,107 +3,300 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>OCPP Messages</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCPP v2.1 Messages Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
+    :root {
+      --primary-bg: #0f172a;
+      --secondary-bg: #1e293b;
+      --card-bg: #334155;
+      --surface-bg: #475569;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-green: #10b981;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: #475569;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+      --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 8px 12px -4px rgba(0, 0, 0, 0.4);
+      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     }
 
-    #searchInput {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      margin-bottom: 20px;
-      font-size: 1em;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    * {
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
     }
 
-    .message-group {
-      margin-bottom: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--primary-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: var(--gradient-primary);
+      border-radius: 2px;
+    }
+
+    .title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 2rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      font-size: 1rem;
+      font-family: inherit;
+      background: var(--secondary-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
       transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 
-    summary {
-      padding: 12px;
-      font-size: 1.1em;
-      font-weight: bold;
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-results-count {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .search-results-count.visible {
+      opacity: 1;
+    }
+
+    .messages-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 1500px;  /* Adjust this value to control the width of the single column */
+        margin: 0 auto;    /* Center the column */
+    }
+
+    .message-card {
+      background: var(--secondary-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .message-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent-blue);
+    }
+
+    .message-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient-accent);
+    }
+
+    .message-header {
+      padding: 1.5rem;
+      background: var(--card-bg);
       cursor: pointer;
-      background-color: #e3f2fd;
-      border-bottom: 1px solid #ccc;
       user-select: none;
+      position: relative;
+      transition: all 0.2s ease;
     }
 
-    .label {
-      padding: 8px;
-      font-weight: bold;
-      background: #f0f0f0;
+    .message-header:hover {
+      background: color-mix(in srgb, var(--card-bg) 80%, var(--accent-blue) 20%);
     }
 
-    /* Styles for JSON formatting and folding */
+    .message-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .expand-icon {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      transition: transform 0.3s ease;
+    }
+
+    .message-card[open] .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .message-content {
+      background: var(--secondary-bg);
+    }
+
+    .section-label {
+      padding: 1rem 1.5rem 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
     .json-block {
-      background: #272822;
-      color: #f8f8f2;
-      border-radius: 6px;
-      margin: 8px 0;
-      padding: 8px 12px;
-      font-family: monospace;
-      font-size: 0.98em;
+      background: #0d1117;
+      color: #f0f6fc;
+      border-radius: 8px;
+      margin: 0.5rem 1.5rem 1.5rem;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.9rem;
       position: relative;
       overflow-x: auto;
+      border: 1px solid #21262d;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     .json-line {
       margin: 2px 0;
       position: relative;
+      min-height: 1.2em;
     }
 
     .json-key {
-      color: #a6e22e;
+      color: #7dd3fc;
+      font-weight: 500;
     }
 
     .json-string {
-      color: #e6db74;
+      color: #a5f3fc;
     }
 
     .json-number,
     .json-boolean {
-      color: #ae81ff;
+      color: #c084fc;
     }
 
     .json-null {
-      color: #66d9ef;
+      color: #fbbf24;
     }
 
     .json-bracket,
     .json-comma {
-      color: #f8f8f2;
+      color: #d1d5db;
     }
 
     .json-colon {
-      color: #f92672;
+      color: #fb7185;
     }
 
     .json-toggle {
       cursor: pointer;
       font-weight: bold;
-      margin-right: 5px;
+      margin-right: 6px;
       user-select: none;
-      color: #66d9ef;
+      color: #60a5fa;
       display: inline-block;
-      width: 12px;
+      width: 14px;
+      transition: color 0.2s ease;
+      font-size: 0.8em;
+    }
+
+    .json-toggle:hover {
+      color: #93c5fd;
     }
 
     .json-collapsed-indicator {
-      color: #75715e;
-      margin-left: 5px;
+      color: #6b7280;
+      margin-left: 8px;
+      font-style: italic;
     }
 
     .json-children {
@@ -116,36 +309,188 @@
 
     .json-controls {
       position: absolute;
-      top: 8px;
+      top: 12px;
       right: 12px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
 
     .json-control-btn {
-      background: #404040;
-      color: #f8f8f2;
-      border: 1px solid #666;
-      padding: 4px 8px;
-      font-size: 11px;
-      border-radius: 3px;
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
       cursor: pointer;
-      font-family: monospace;
-      transition: background-color 0.2s;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
     }
 
     .json-control-btn:hover {
-      background: #505050;
+      background: var(--accent-blue);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .no-results-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      border-top-color: var(--accent-blue);
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: var(--secondary-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .messages-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-bar {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .json-controls {
+        position: static;
+        margin-bottom: 1rem;
+        justify-content: flex-end;
+      }
+
+      .json-block {
+        margin: 0.5rem 0 1rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Scroll improvements */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--secondary-bg);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--surface-bg);
+    }
+
+    /* Smooth reveal animation */
+    .message-card {
+      animation: slideInUp 0.6s ease-out;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 
 <body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">OCPP v2.1 JSON Schema Definitions</h1>
+    </header>
 
-  <h1>OCPP v2.1 Messages</h1>
-  <input type="search" id="searchInput" placeholder="Search message name..." autocomplete="off" />
+    <div class="search-container">
+      <div class="search-icon">🔍</div>
+      <input type="search" id="searchInput" class="search-input" placeholder="Search message names..." autocomplete="off" />
+    </div>
 
-  <div id="container"></div>
+    <div id="searchResults" class="search-results-count"></div>
+    
+    <!-- <div id="statsBar" class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-number" id="totalMessages">0</span>
+        <span class="stat-label">Total Messages</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" id="visibleMessages">0</span>
+        <span class="stat-label">Visible</span>
+      </div>
+    </div> -->
+
+    <div id="container" class="messages-grid"></div>
+  </div>
 
   <script>
     const ocppMessages = {
