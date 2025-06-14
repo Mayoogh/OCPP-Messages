@@ -4,10 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCPP v2.1 Messages Explorer</title>
+  <title>OCPP JSON Messages Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --primary-bg: #0f172a;
@@ -39,7 +41,7 @@
       color: var(--text-primary);
       line-height: 1.6;
       min-height: 100vh;
-      background-image: 
+      background-image:
         radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
     }
@@ -140,11 +142,13 @@
     }
 
     .messages-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        max-width: 1500px;  /* Adjust this value to control the width of the single column */
-        margin: 0 auto;    /* Center the column */
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 1500px;
+      /* Adjust this value to control the width of the single column */
+      margin: 0 auto;
+      /* Center the column */
     }
 
     .message-card {
@@ -452,11 +456,34 @@
       animation: slideInUp 0.6s ease-out;
     }
 
+    .home-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .home-button:hover {
+      background: var(--accent-blue-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+
     @keyframes slideInUp {
       from {
         opacity: 0;
         transform: translateY(30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -468,16 +495,18 @@
 <body>
   <div class="container">
     <header class="header">
+      <button class="home-button" onclick="goToHome()">Home</button>
       <h1 class="title">OCPP v2.1 JSON Schema Definitions</h1>
     </header>
 
     <div class="search-container">
       <div class="search-icon">🔍</div>
-      <input type="search" id="searchInput" class="search-input" placeholder="Search message names..." autocomplete="off" />
+      <input type="search" id="searchInput" class="search-input" placeholder="Search message names..."
+        autocomplete="off" />
     </div>
 
     <div id="searchResults" class="search-results-count"></div>
-    
+
     <!-- <div id="statsBar" class="stats-bar">
       <div class="stat-item">
         <span class="stat-number" id="totalMessages">0</span>
@@ -493,6 +522,9 @@
   </div>
 
   <script>
+    function goToHome() {
+      window.location.href = '../index.html';
+    }
     const ocppMessages = {
       "AdjustPeriodicEventStream": {
         "request": {
@@ -22594,15 +22626,15 @@
     function formatJsonToHtml(data, indent = 0) {
       const container = document.createElement('div');
       const allToggles = []; // Store all toggle elements for fold/unfold all functionality
-      
+
       function createIndent(level) {
         return '  '.repeat(level);
       }
-      
+
       function createLine(content, hasToggle = false, toggleCallback = null) {
         const line = document.createElement('div');
         line.className = 'json-line';
-        
+
         if (hasToggle) {
           const toggle = document.createElement('span');
           toggle.className = 'json-toggle';
@@ -22616,58 +22648,58 @@
           spacer.textContent = ' ';
           line.appendChild(spacer);
         }
-        
+
         const contentSpan = document.createElement('span');
         contentSpan.innerHTML = createIndent(indent) + content;
         line.appendChild(contentSpan);
-        
+
         return line;
       }
-      
+
       function formatValue(value, key = null, isLast = true) {
         let prefix = '';
         if (key !== null) {
           prefix = `<span class="json-key">"${key}"</span><span class="json-colon">: </span>`;
         }
-        
+
         if (value === null) {
           const line = createLine(prefix + `<span class="json-null">null</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
           return { element: line, hasChildren: false };
         }
-        
+
         if (typeof value === 'string') {
           const line = createLine(prefix + `<span class="json-string">"${value}"</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
           return { element: line, hasChildren: false };
         }
-        
+
         if (typeof value === 'number') {
           const line = createLine(prefix + `<span class="json-number">${value}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
           return { element: line, hasChildren: false };
         }
-        
+
         if (typeof value === 'boolean') {
           const line = createLine(prefix + `<span class="json-boolean">${value}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
           return { element: line, hasChildren: false };
         }
-        
+
         if (Array.isArray(value)) {
           const childrenContainer = document.createElement('div');
           childrenContainer.className = 'json-children';
-          
+
           const hasChildren = value.length > 0;
           const collapsedIndicator = hasChildren ? '<span class="json-collapsed-indicator">...</span>' : '';
-          
+
           const openLine = createLine(
             prefix + `<span class="json-bracket">[</span><span class="json-collapsed-indicator" style="display: none;">${collapsedIndicator}</span>`,
             hasChildren,
-            function() {
+            function () {
               const isHidden = childrenContainer.classList.toggle('hidden');
               this.textContent = isHidden ? '▶' : '▼';
               const indicator = this.parentElement.querySelector('.json-collapsed-indicator');
               indicator.style.display = isHidden ? 'inline' : 'none';
             }
           );
-          
+
           if (hasChildren) {
             value.forEach((item, index) => {
               const isLastItem = index === value.length - 1;
@@ -22677,37 +22709,37 @@
               childrenContainer.appendChild(childFormatter);
             });
           }
-          
+
           const closeLine = createLine(`<span class="json-bracket">]</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
-          
+
           const wrapper = document.createElement('div');
           wrapper.appendChild(openLine);
           wrapper.appendChild(childrenContainer);
           wrapper.appendChild(closeLine);
-          
+
           return { element: wrapper, hasChildren };
         }
-        
+
         if (typeof value === 'object') {
           const keys = Object.keys(value);
           const hasChildren = keys.length > 0;
-          
+
           const childrenContainer = document.createElement('div');
           childrenContainer.className = 'json-children';
-          
+
           const collapsedIndicator = hasChildren ? '<span class="json-collapsed-indicator">...</span>' : '';
-          
+
           const openLine = createLine(
             prefix + `<span class="json-bracket">{</span><span class="json-collapsed-indicator" style="display: none;">${collapsedIndicator}</span>`,
             hasChildren,
-            function() {
+            function () {
               const isHidden = childrenContainer.classList.toggle('hidden');
               this.textContent = isHidden ? '▶' : '▼';
               const indicator = this.parentElement.querySelector('.json-collapsed-indicator');
               indicator.style.display = isHidden ? 'inline' : 'none';
             }
           );
-          
+
           if (hasChildren) {
             keys.forEach((k, index) => {
               const isLastItem = index === keys.length - 1;
@@ -22715,14 +22747,14 @@
               const childLine = createLine(
                 `<span class="json-key">"${k}"</span><span class="json-colon">: </span>`,
                 typeof value[k] === 'object' && value[k] !== null && Object.keys(value[k]).length > 0,
-                typeof value[k] === 'object' && value[k] !== null && Object.keys(value[k]).length > 0 ? 
-                  function() {
+                typeof value[k] === 'object' && value[k] !== null && Object.keys(value[k]).length > 0 ?
+                  function () {
                     const childContainer = this.parentElement.nextElementSibling;
                     const isHidden = childContainer.classList.toggle('hidden');
                     this.textContent = isHidden ? '▶' : '▼';
                   } : null
               );
-              
+
               if (typeof value[k] === 'object' && value[k] !== null) {
                 childrenContainer.appendChild(childLine);
                 const nestedContainer = document.createElement('div');
@@ -22735,26 +22767,26 @@
               }
             });
           }
-          
+
           const closeLine = createLine(`<span class="json-bracket">}</span>${isLast ? '' : '<span class="json-comma">,</span>'}`);
-          
+
           const wrapper = document.createElement('div');
           wrapper.appendChild(openLine);
           wrapper.appendChild(childrenContainer);
           wrapper.appendChild(closeLine);
-          
+
           return { element: wrapper, hasChildren };
         }
       }
-      
+
       const result = formatValue(data);
       container.appendChild(result.element);
-      
+
       // Add the fold/unfold all controls if there are toggles
       if (allToggles.length > 0) {
         const controls = document.createElement('div');
         controls.className = 'json-controls';
-        
+
         const foldAllBtn = document.createElement('button');
         foldAllBtn.className = 'json-control-btn';
         foldAllBtn.textContent = 'Fold All';
@@ -22769,7 +22801,7 @@
             }
           });
         });
-        
+
         const unfoldAllBtn = document.createElement('button');
         unfoldAllBtn.className = 'json-control-btn';
         unfoldAllBtn.textContent = 'Unfold All';
@@ -22781,12 +22813,12 @@
             }
           });
         });
-        
+
         controls.appendChild(foldAllBtn);
         controls.appendChild(unfoldAllBtn);
         container.appendChild(controls);
       }
-      
+
       return container;
     }
 
